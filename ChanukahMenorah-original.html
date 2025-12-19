@@ -460,43 +460,70 @@
             const now = new Date();
             
             // Hanukkah 2025: December 14-22
-            // Night 1 starts evening of Dec 14
-            const hanukkahStart = new Date(2025, 11, 14); // Dec 14, 2025
-            const hanukkahEnd = new Date(2025, 11, 22, 23, 59, 59); // Dec 22, 2025
+            const hanukkah2025Start = new Date(2025, 11, 14); // Dec 14, 2025
+            const hanukkah2025End = new Date(2025, 11, 22, 23, 59, 59); // Dec 22, 2025
+            
+            // Hanukkah 2026: December 4-12
+            const hanukkah2026Start = new Date(2026, 11, 4); // Dec 4, 2026
+            const hanukkah2026End = new Date(2026, 11, 12, 23, 59, 59); // Dec 12, 2026
             
             // For testing outside Hanukkah dates, you can override:
-            // return 5; // Uncomment to test specific night
+            // return { night: 5, year: 2025 }; // Uncomment to test specific night
+            // return { night: -1, countdown: 100 }; // Uncomment to test countdown
             
-            if (now < hanukkahStart) {
-                return 0; // Before Hanukkah
+            // Before Hanukkah 2025
+            if (now < hanukkah2025Start) {
+                const daysUntil = Math.ceil((hanukkah2025Start - now) / (1000 * 60 * 60 * 24));
+                return { night: -1, countdown: daysUntil, year: 2025 };
             }
             
-            if (now > hanukkahEnd) {
-                return 9; // After Hanukkah (show all candles)
+            // During Hanukkah 2025
+            if (now >= hanukkah2025Start && now <= hanukkah2025End) {
+                const daysDiff = Math.floor((now - hanukkah2025Start) / (1000 * 60 * 60 * 24));
+                return { night: Math.min(daysDiff + 1, 8), year: 2025 };
             }
             
-            // Calculate night (1-8)
-            const daysDiff = Math.floor((now - hanukkahStart) / (1000 * 60 * 60 * 24));
-            return Math.min(daysDiff + 1, 8);
+            // After Hanukkah 2025, before Hanukkah 2026
+            if (now > hanukkah2025End && now < hanukkah2026Start) {
+                const daysUntil = Math.ceil((hanukkah2026Start - now) / (1000 * 60 * 60 * 24));
+                return { night: -1, countdown: daysUntil, year: 2026 };
+            }
+            
+            // During Hanukkah 2026
+            if (now >= hanukkah2026Start && now <= hanukkah2026End) {
+                const daysDiff = Math.floor((now - hanukkah2026Start) / (1000 * 60 * 60 * 24));
+                return { night: Math.min(daysDiff + 1, 8), year: 2026 };
+            }
+            
+            // After Hanukkah 2026
+            return { night: 9, year: 2026 };
         }
 
         // Light candles with animation
-        function lightCandles(night) {
+        function lightCandles(result) {
             const nightIndicator = document.getElementById('nightIndicator');
             const ambientGlow = document.getElementById('ambientGlow');
             
-            if (night === 0) {
-                nightIndicator.textContent = 'Hanukkah begins December 14';
-                return;
+            // Countdown mode
+            if (result.night === -1) {
+                if (result.countdown === 1) {
+                    nightIndicator.textContent = `Chanukah ${result.year} begins tomorrow!`;
+                } else {
+                    nightIndicator.textContent = `Chanukah ${result.year} begins in ${result.countdown} days`;
+                }
+                return; // Don't light any candles
             }
             
-            if (night === 9) {
-                nightIndicator.textContent = 'Hanukkah 2025 has ended';
-                night = 8; // Show all candles lit
+            // After Hanukkah 2026 ended
+            if (result.night === 9) {
+                nightIndicator.textContent = `Chanukah ${result.year} has ended`;
+                result.night = 8; // Show all candles lit
             } else {
                 const ordinals = ['', 'First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth'];
-                nightIndicator.textContent = `${ordinals[night]} Night`;
+                nightIndicator.textContent = `${ordinals[result.night]} Night`;
             }
+            
+            const night = result.night;
             
             // Get candle holders
             const shamash = document.querySelector('[data-position="shamash"] .flame-container');
@@ -528,8 +555,8 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             createStars();
-            const night = getHanukkahNight();
-            lightCandles(night);
+            const result = getHanukkahNight();
+            lightCandles(result);
         });
     </script>
 </body>
